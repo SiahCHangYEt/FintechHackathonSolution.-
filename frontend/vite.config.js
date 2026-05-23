@@ -17,3 +17,4 @@ export default defineConfig({
     strictPort: true   // Forces Vite to crash with a clear log if the port is busy instead of silently choosing a random one
   }
 })
+

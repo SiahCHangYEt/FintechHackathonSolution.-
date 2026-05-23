@@ -1,71 +1,45 @@
 <script setup>
 import { ref } from 'vue'
+import SubjectDashboard from './components/SubjectDashboard.vue'
 
-// Simple counter state to ensure Vue interactivity works along with Tailwind
-const clickCount = ref(0)
+// 🎯 HARDCODED PROFILE MODE: Change these values to test different layout combinations!
+const mockStudentProfile = ref({
+  academicLevel: 'Form 5', // Try: 'Form 3', 'Form 4', 'Form 5'
+  languagePreference: 'English', // Try: 'English', 'Bahasa Melayu'
+  stream: 'sains', // Try: 'sains', 'sastera', or leave '' for lower secondary
+  selectedElectives: ['addmath', 'physics', 'chemistry','compsci'] // Add/remove IDs to see the grid adapt
+})
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6 antialiased selection:bg-indigo-500 selection:text-white">
-    <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6 relative overflow-hidden group">
+  <div class="min-h-screen bg-gray-950 text-gray-100 p-6 md:p-12">
+    <div class="max-w-6xl mx-auto space-y-6">
       
-      <!-- Top Decorative Accent Lines (Tests Absolute Positioning & Gradients) -->
-      <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80"></div>
-      
-      <!-- Header Section (Tests Flexbox, Alignments, and Spacing) -->
-      <div class="flex items-start justify-between">
-        <div class="space-y-1">
-          <span class="text-xs font-bold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-md border border-indigo-500/20">
-            System Diagnostics
-          </span>
-          <h1 class="text-2xl font-black text-white tracking-tight pt-2">
-            Tailwind CSS Test
+      <!-- Isolation Workspace Banner Badge -->
+      <div class="flex items-center justify-between border border-amber-500/30 bg-amber-500/10 rounded-xl px-4 py-2.5 text-xs text-amber-400">
+        <div class="flex items-center gap-2">
+          <span class="animate-pulse h-2 w-2 rounded-full bg-amber-400"></span>
+          <span><strong>Component Sandbox Mode:</strong> Bypassing entry form registration to expedite UI assembly line routing.</span>
+        </div>
+        <span class="hidden md:inline font-mono text-[10px] bg-gray-900 px-2 py-0.5 rounded text-gray-400 border border-gray-800">
+          State: Simulated Sandbox Profile
+        </span>
+      </div>
+
+      <!-- App Header Bar -->
+      <header class="flex items-center justify-between pb-6 border-b border-gray-800">
+        <div>
+          <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
+            Malaysia AI Edu Portal
           </h1>
+          <p class="text-xs text-gray-400 mt-0.5">Core student profile analytical telemetry.</p>
         </div>
-        
-        <!-- Status Indicator (Tests Pulsing Animations) -->
-        <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
-          <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span class="text-xs font-bold text-emerald-400">Active</span>
-        </div>
-      </div>
+      </header>
 
-      <!-- Feature Grid Checklist (Tests Tailwind Grid System & Background Tints) -->
-      <div class="grid grid-cols-1 gap-3 pt-2">
-        <div class="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl border border-slate-800/60 hover:border-slate-700 transition-colors">
-          <span class="text-indigo-400 font-bold">✓</span>
-          <p class="text-sm font-medium text-slate-300">Base Utilities & Layout Engines</p>
-        </div>
-        <div class="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl border border-slate-800/60 hover:border-slate-700 transition-colors">
-          <span class="text-blue-400 font-bold">✓</span>
-          <p class="text-sm font-medium text-slate-300">Arbitrary Colors & Layer Opacity</p>
-        </div>
-        <div class="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl border border-slate-800/60 hover:border-slate-700 transition-colors">
-          <span class="text-purple-400 font-bold">✓</span>
-          <p class="text-sm font-medium text-slate-300">Dynamic UI Transitions & States</p>
-        </div>
-      </div>
-
-      <!-- Interactive Counter Area (Tests Vue + Tailwind Interactive Binding) -->
-      <div class="bg-slate-950/50 rounded-2xl p-4 border border-slate-800 text-center space-y-3">
-        <p class="text-xs text-slate-500 font-mono tracking-tight">
-          Interactive Testing Environment
-        </p>
-        <button 
-          @click="clickCount++"
-          class="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 active:scale-[0.98] text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/20 transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900"
-        >
-          Click Sandbox: <span class="font-black bg-white/20 px-2 py-0.5 rounded ml-1">{{ clickCount }}</span>
-        </button>
-      </div>
-
-      <!-- Footer Badge -->
-      <p class="text-center text-xs text-slate-600 font-medium">
-        Vite Compilation Hub &bull; Ready for Sandbox Coding
-      </p>
+      <!-- Mount the Child Subject Dashboard Directly -->
+      <main class="mt-6">
+        <SubjectDashboard :studentProfile="mockStudentProfile" />
+      </main>
 
     </div>
   </div>
