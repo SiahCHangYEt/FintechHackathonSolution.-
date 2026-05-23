@@ -65,7 +65,7 @@ const handleQuizSelected = (payload) => {
       <header class="flex items-center justify-between pb-6 border-b border-gray-800">
         <div>
           <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
-            Malaysia AI Edu Portal
+            Didik AI Portal
           </h1>
           <p class="text-xs text-gray-400 mt-0.5 font-mono">
             <span v-if="currentView === 'dashboard'">
