@@ -246,17 +246,17 @@ const BACKEND_URL = 'http://127.0.0.1:5000'
 const TOTAL_STEPS = 6
 
 const currentStep = ref(1) 
-const formLevel   = ref(5) 
-const language    = ref('EN')
-const stream      = ref('sains')
+const formLevel   = ref(null) 
+const language    = ref('')
+const stream      = ref('')
 const isSubmitting = ref(false)
 const selectedElectives = ref(['Additional Mathematics (Add Maths)', 'Physics (Fizik)', 'Chemistry (Kimia)', 'Biology (Biologi)'])
 
 const personal = reactive({
-  fullName:   'Siah Chang Yet', 
-  schoolName: 'Sunway College',
+  fullName:   '', 
+  schoolName: '',
   state: 'Selangor',
-  gender: 'male',
+  gender: '',
 })
 
 const academic = reactive({
@@ -275,14 +275,23 @@ const electivesList = {
   sastera: ['Economics (Ekonomi)', 'Accounting (Perakaunan)', 'Business Studies (Perniagaan)']
 }
 
-const malaysianStates = ['Selangor', 'Johor', 'Penang', 'Sabah', 'Sarawak', 'Kuala Lumpur','Kedah','Perlis','Pahang','Kelantan','Terengganu','Putrajaya','Labuan']
-const hobbyOptions = ['Gaming', 'Coding', 'Music', 'Drawing', 'Football', 'Chess']
+const malaysianStates = ['Selangor', 'Johor', 'Penang', 'Sabah', 'Sarawak', 'Kuala Lumpur','Kedah','Perlis','Pahang','Kelantan','Terengganu','Putrajaya',]
+const hobbyOptions = [
+  'Coding', 'Gaming', 'Mobile App Dev', 'Robotics building',
+  'Chess', 'Mathematics Puzzles', 'Reading Sci-Fi', 'Creative Writing',
+  'Drawing/Animation', 'Music/Instrument', 'Photography', 'Video Editing',
+  'Football', 'Badminton', 'Basketball', 'Athletics'
+]
 
 const interestOptions = [
-  { value: 'tech',     label: 'Tech & Engineering', icon: '💻' },
-  { value: 'arts',     label: 'Creative Arts',      icon: '🎨' },
-  { value: 'sports',   label: 'Athletics & Sports', icon: '🏆' },
-  { value: 'sciences', label: 'Research Sciences',  icon: '🧪' }
+  { value: 'tech',       label: 'Computer Science & AI', icon: '💻' },
+  { value: 'robotics',   label: 'Robotics & Engineering',icon: '🤖' },
+  { value: 'sciences',   label: 'Pure & Research Sciences',icon: '🧪' },
+  { value: 'medical',    label: 'Medical & Healthcare',  icon: '🩺' },
+  { value: 'finance',    label: 'Fintech & Economics',   icon: '📈' },
+  { value: 'arts',       label: 'Creative & Digital Arts',icon: '🎨' },
+  { value: 'literature', label: 'Literature & Languages',icon: '📚' },
+  { value: 'law',        label: 'Law & Social Sciences', icon: '⚖️' }
 ]
 
 // 🛠️ KSSM Lower Secondary Skipper Mechanics
@@ -312,10 +321,10 @@ const progressPct = computed(() => Math.round((Math.min(currentStep.value, TOTAL
 const canProceedStep3 = computed(() => isLowerSecondary.value || (!!stream.value && selectedElectives.value.length > 0))
 const canProceedStep4 = computed(() => !!personal.fullName && !!personal.schoolName && !!personal.state)
 const canProceedStep5 = computed(() => !!academic.appealReason && !!academic.appealText.trim())
-const canSubmit       = computed(() => !!lifestyle.primaryInterest && lifestyle.selectedHobbies.length > 0)
+const canSubmit       = computed(() => true)
 
 watch(stream, () => { 
-  if (!isLowerSecondary.value) selectedElectives.value = [] 
+  if (!isLowerSecondary.value && stream.value !== 'General Lower Secondary') selectedElectives.value = [] 
 })
 
 async function submitForm() {
