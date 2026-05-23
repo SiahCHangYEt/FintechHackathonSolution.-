@@ -79,29 +79,46 @@ app.get('/api/db-test', async (req, res) => {
 app.post('/ai/chat', async (req, res) => {
   try {
     const { prompt } = req.body
+    if (!prompt) return res.status(400).json({ error: 'Prompt content is required!' })
 
-    if (!prompt) {
-      return res.status(400).json({ error: 'Prompt content is required!' })
-    }
-
+    // 🤖 Force Gemini to return a structured JSON object containing both the text and a flag!
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            tutorReply: { type: "string", description: "The full conversational math explanation incorporating strict LaTeX." },
+            requiresVisualGraph: { type: "boolean", description: "True if the user explicitly asked for a visualization, graph, or diagram, or if explaining the concept heavily benefits from a coordinate plot." }
+          },
+          required: ["tutorReply", "requiresVisualGraph"]
+        }
+      }
     })
 
-    res.json({
-      success: true,
-      reply: response.text
+    // Parse the JSON string payload safely
+    const aiPayload = JSON.parse(response.text)
+    let generatedImageUrl = null
+
+    // If the AI model decides a visual aid is necessary, attach the live chart engine link!
+    if (aiPayload.requiresVisualGraph) {
+      // Dynamic Charting: You can customize these dataset arrays to display live parabola vectors!
+      generatedImageUrl = `https://quickchart.io/chart?c={type:'line',data:{labels:[-3,-2,-1,0,1,2,3],datasets:[{label:'f(x) = x^2 - 2x',data:[15,8,3,0,-1,0,3],borderColor:'rgb(96,165,250)',backgroundColor:'rgba(96,165,250,0.1)',fill:true,lineTension:0.4}]}}`
+    }
+
+    res.json({ 
+      success: true, 
+      reply: aiPayload.tutorReply, // Maps directly to your text bubble
+      imageUrl: generatedImageUrl
     })
+
   } catch (err) {
-    console.error('Gemini engine failure:', err)
-    res.status(500).json({
-      error: 'Failed to process prompt through the AI gateway framework',
-      details: err.message
-    })
+    console.error(err)
+    res.status(500).json({ error: 'Gemini dynamic engine failure', details: err.message })
   }
 })
-
 // 📊 End-to-End Student Profile and Progress Aggregation Gateway
 app.get('/api/student/:id/dashboard', async (req, res) => {
   try {
