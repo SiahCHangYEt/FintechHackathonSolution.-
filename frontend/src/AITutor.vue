@@ -134,25 +134,45 @@ const handleRegenerateMessage = async () => {
 }
 
 // Handle Active Student Follow-up Questions
+// Handle Active Student Follow-up Questions
 const handleSendMessage = async () => {
   if (!userInput.value.trim() || isAIThinking.value) return
   
   const studentText = userInput.value
   lastSentPrompt.value = studentText
+  
+  // Instantly append student bubble into view array
   chatMessages.value.push({ sender: 'student', text: studentText })
   userInput.value = ''
   isAIThinking.value = true
   await scrollToBottom()
   
   try {
+    // 🧠 Context Harvesting: Create system framework payload cleanly
     const contextualPrompt = generateSystemContextPrompt(studentText, 'chat')
-    const response = await axios.post('http://127.0.0.1:5000/ai/chat', { prompt: contextualPrompt })
     
-    chatMessages.value.push({ sender: 'ai', text: response.data.reply,imageUrl: response.data.url })
+    // ⚡ FIXED AXIOS ROUTING PATTERN: Cleaner data parsing mapping
+    const response = await axios.post('http://127.0.0.1:5000/ai/chat', {
+      prompt: contextualPrompt,
+      selectedSubject: props.subjectName, // Matches incoming props data mapping
+      selectedChapter: props.selectedChapter,
+      studentProfile: props.studentProfile
+    })
+    
+    // Append AI reply alongside the new QuickChart link parameters
+    chatMessages.value.push({ 
+      sender: 'ai', 
+      text: response.data.reply,
+      imageUrl: response.data.imageUrl // ⚡ Fixed property name mapping to match backend!
+    })
+    
     await triggerMathJaxReparse()
   } catch (err) {
     console.error('AI Chat Error:', err.message)
-    chatMessages.value.push({ sender: 'ai', text: "Sorry, my proxy line dropped. Let's try that question again!" })
+    chatMessages.value.push({ 
+      sender: 'ai', 
+      text: "Adoi, my proxy line dropped out! Let's try sending that question again." 
+    })
   } finally {
     isAIThinking.value = false
     await scrollToBottom()
@@ -203,43 +223,44 @@ onMounted(() => {
       </div>
 
       <div ref="chatScrollContainer" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-950/30">
-        <div 
-          v-for="(msg, index) in chatMessages" 
-          :key="index"
-          :class="['flex w-full', msg.sender === 'student' ? 'justify-end' : 'justify-start']"
-        >
-          <div :class="['max-w-[85%] rounded-2xl p-4 shadow-md text-sm leading-relaxed whitespace-pre-wrap', 
-            msg.sender === 'student' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-800 text-gray-100 border border-gray-700/60 rounded-bl-none']"
-          >
-          <div>
-            {{ msg.text }}
-            <div v-if="msg.imageUrl" class="mt-4 border border-gray-700 rounded-xl overflow-hidden bg-gray-900 p-2">
-            <img :src="msg.imageUrl" alt="AI Generated Math Vector Chart" class="max-h-64 object-contain mx-auto" />
-          </div>
-          <div class="mt-2 pt-2 border-t border-gray-700/40 flex gap-3 text-[11px] text-gray-400 justify-end">
-        <button @click="copyMessageToClipboard(msg.text)" class="hover:text-white transition-colors flex items-center gap-1">
+  <div 
+    v-for="(msg, index) in chatMessages" 
+    :key="index"
+    :class="['flex w-full', msg.sender === 'student' ? 'justify-end' : 'justify-start']"
+  >
+    <div :class="['max-w-[85%] rounded-2xl p-4 shadow-md text-sm leading-relaxed whitespace-pre-wrap relative', 
+      msg.sender === 'student' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-800 text-gray-100 border border-gray-700/60 rounded-bl-none']"
+    >
+      <div class="prose prose-invert text-sm max-w-none">{{ msg.text }}</div>
+      
+      <div v-if="msg.imageUrl" class="mt-4 border border-gray-700/60 rounded-xl overflow-hidden bg-gray-950 p-2 reveal">
+        <img :src="msg.imageUrl" alt="AI Generated Math Vector Chart" class="max-h-64 object-contain mx-auto rounded-lg" />
+      </div>
+
+      <div class="mt-3 pt-2 border-t border-gray-700/40 flex gap-3 text-[11px] text-gray-400 justify-end">
+        <button @click="copyMessageToClipboard(msg.text)" class="hover:text-white transition-colors flex items-center gap-1 cursor-pointer">
           📋 Copy
         </button>
         <button 
           v-if="msg.sender === 'ai' && index === chatMessages.length - 1" 
           @click="handleRegenerateMessage" 
-          class="hover:text-purple-400 transition-colors flex items-center gap-1"
+          class="hover:text-purple-400 transition-colors flex items-center gap-1 cursor-pointer"
         >
           🔄 Regenerate
         </button>
       </div>
-        </div>
-          </div>
-          </div>
-        <div v-if="isAIThinking" class="flex justify-start w-full">
-          <div class="bg-gray-800 border border-gray-700/60 text-gray-400 rounded-2xl rounded-bl-none p-4 flex items-center gap-1 text-xs">
-            <span class="animate-bounce">●</span>
-            <span class="animate-bounce [animation-delay:0.2s]">●</span>
-            <span class="animate-bounce [animation-delay:0.4s]">●</span>
-            <span class="ml-1">Tutor generating analogy link...</span>
-          </div>
-        </div>
-      </div>
+    </div>
+  </div>
+  
+  <div v-if="isAIThinking" class="flex justify-start w-full">
+    <div class="bg-gray-800 border border-gray-700/60 text-gray-400 rounded-2xl rounded-bl-none p-4 flex items-center gap-1 text-xs">
+      <span class="animate-bounce">●</span>
+      <span class="animate-bounce [animation-delay:0.2s]">●</span>
+      <span class="animate-bounce [animation-delay:0.4s]">●</span>
+      <span class="ml-1 font-mono">Tutor plotting coordinate matrix mapping...</span>
+    </div>
+  </div>
+</div>
 
       <div class="p-4 bg-gray-900 border-t border-gray-800">
         <form @submit.prevent="handleSendMessage" class="flex gap-3">
