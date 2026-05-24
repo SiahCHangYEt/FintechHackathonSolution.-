@@ -23,20 +23,26 @@ const userInput = ref('')
 const isAIThinking = ref(false)
 const chatScrollContainer = ref(null)
 
-// 🤖 1. The Prompt Engineer Blueprint (Connecting KSSM to Interests)
+// The Prompt Engineer Blueprint (Connecting KSSM to Interests)
 const generateSystemContextPrompt = (userPrompt, mode = 'chat') => {
   const interestList = props.studentProfile?.interests || ['gaming', 'sports'];
   const formattedInterests = Array.isArray(interestList) ? interestList.join(', ') : interestList;
   const context = `
-    You are an elite, encouraging Malaysian high school tutor specializing in the KSSM curriculum for ${props.studentProfile.academicLevel}.
+    You are an elite, encouraging Malaysian high school tutor specializing in the KSSM curriculum for ${props.studentProfile?.academicLevel || 'Form 5'}.
     You are currently teaching the subject "${props.selectedSubject}", specifically "${props.selectedChapter}".
-    The student prefers instruction in ${props.studentProfile.languagePreference}.
+    The student prefers instruction in ${props.studentProfile?.languagePreference || 'English'}.
     Crucially, the student is passionate about: ${formattedInterests}.
     
+    CRITICAL MATH FORMATTING RULES:
+    - You MUST use strict standard LaTeX formatting for ALL mathematical variables, values, expressions, and full equations so that the client-side MathJax processor can parse them correctly.
+    - Wrap single variables, brief terms, or inline expressions using SINGLE dollar signs. Example: $y = mx + c$ or $x$.
+    - Wrap larger standalone equations, fractions, square roots, or multi-line formulas on their own lines using DOUBLE dollar signs. Example: $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
+    - Never write raw text symbols like ^, /, or sqrt() for math expressions. Always use the proper LaTeX equivalents (e.g., $x^2$, $\\frac{a}{b}$, $\\sqrt{x}$).
+    
     INSTRUCTIONS:
-    - Explain concepts using metaphors, examples, and data structures related directly to their interests (e.g., explaining quadratic curves using grenade trajectories in games or racing lines in F1).
-    - Keep responses concise, engaging, and readable using clear Markdown bullet points.
-    - If the language preference is English, use standard English but you can occasionally use light Malaysian context cues (like "jom", "Finas", "SPM") to keep it authentic. If Bahasa Melayu, use clean standard BM.
+    - Explain concepts using metaphors, examples, and analogies related directly to their interests (e.g., explaining quadratic curves using grenade trajectories in games or racing lines in F1).
+    - Keep responses concise, engaging, and highly readable using clear Markdown bullet points.
+    - If the language preference is English, use standard English but you can occasionally use light Malaysian context cues (like "jom", "la", "SPM") to keep it authentic. If Bahasa Melayu, use clean standard BM.
   `
   
   if (mode === 'init') {
@@ -53,8 +59,17 @@ const scrollToBottom = async () => {
     chatScrollContainer.value.scrollTop = chatScrollContainer.value.scrollHeight
   }
 }
-
-// 🧠 2. Trigger the Initial AI Chapter Hook on Mount
+const triggerMathJaxReparse = async () => {
+  // Wait for Vue to fully update the HTML elements in the DOM first
+  await nextTick()
+  
+  // If MathJax is fully loaded in the browser window, force a content sweep
+  if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+    window.MathJax.typesetPromise()
+      .catch((err) => console.error('MathJax parsing failure:', err))
+  }
+}
+// Trigger the Initial AI Chapter Hook on Mount
 const initializeTutorWelcome = async () => {
   try {
     isAIThinking.value = true
@@ -67,6 +82,7 @@ const initializeTutorWelcome = async () => {
       sender: 'ai',
       text: response.data.reply
     })
+    await triggerMathJaxReparse()
   } catch (err) {
     console.error('AI Initialization Error:', err.message)
     chatMessages.value.push({
@@ -79,11 +95,50 @@ const initializeTutorWelcome = async () => {
   }
 }
 
-// 💬 3. Handle Active Student Follow-up Questions
+const lastSentPrompt = ref('') // Remembers the last question for the regenerate hook
+
+// Copy Message text safely to the OS Clipboard
+const copyMessageToClipboard = (text) => {
+  navigator.clipboard.writeText(text)
+    .then(() => alert('Message copied to clipboard! 📋'))
+    .catch(err => console.error('Could not copy text: ', err))
+}
+
+// Regenerate the absolute last AI Response
+const handleRegenerateMessage = async () => {
+  if (chatMessages.value.length === 0 || isAIThinking.value) return
+  
+  // Remove the last AI response from the stream array if it exists
+  if (chatMessages.value[chatMessages.value.length - 1].sender === 'ai') {
+    chatMessages.value.pop()
+  }
+  
+  isAIThinking.value = true
+  try {
+    // Re-call using the system prompt contextual blueprint saved earlier
+    const contextualPrompt = generateSystemContextPrompt(lastSentPrompt.value, lastSentPrompt.value ? 'chat' : 'init')
+    const response = await axios.post('http://127.0.0.1:5000/ai/chat', { prompt: contextualPrompt })
+    
+    chatMessages.value.push({ 
+      sender: 'ai', 
+      text: response.data.reply,
+      imageUrl: response.data.imageUrl // Handles image display
+    })
+    await triggerMathJaxReparse()
+  } catch (err) {
+    console.error('Regeneration core error:', err.message)
+  } finally {
+    isAIThinking.value = false
+    await scrollToBottom()
+  }
+}
+
+// Handle Active Student Follow-up Questions
 const handleSendMessage = async () => {
   if (!userInput.value.trim() || isAIThinking.value) return
   
   const studentText = userInput.value
+  lastSentPrompt.value = studentText
   chatMessages.value.push({ sender: 'student', text: studentText })
   userInput.value = ''
   isAIThinking.value = true
@@ -93,7 +148,8 @@ const handleSendMessage = async () => {
     const contextualPrompt = generateSystemContextPrompt(studentText, 'chat')
     const response = await axios.post('http://127.0.0.1:5000/ai/chat', { prompt: contextualPrompt })
     
-    chatMessages.value.push({ sender: 'ai', text: response.data.reply })
+    chatMessages.value.push({ sender: 'ai', text: response.data.reply,imageUrl: response.data.url })
+    await triggerMathJaxReparse()
   } catch (err) {
     console.error('AI Chat Error:', err.message)
     chatMessages.value.push({ sender: 'ai', text: "Sorry, my proxy line dropped. Let's try that question again!" })
@@ -155,10 +211,26 @@ onMounted(() => {
           <div :class="['max-w-[85%] rounded-2xl p-4 shadow-md text-sm leading-relaxed whitespace-pre-wrap', 
             msg.sender === 'student' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-800 text-gray-100 border border-gray-700/60 rounded-bl-none']"
           >
+          <div>
             {{ msg.text }}
+            <div v-if="msg.imageUrl" class="mt-4 border border-gray-700 rounded-xl overflow-hidden bg-gray-900 p-2">
+            <img :src="msg.imageUrl" alt="AI Generated Math Vector Chart" class="max-h-64 object-contain mx-auto" />
           </div>
+          <div class="mt-2 pt-2 border-t border-gray-700/40 flex gap-3 text-[11px] text-gray-400 justify-end">
+        <button @click="copyMessageToClipboard(msg.text)" class="hover:text-white transition-colors flex items-center gap-1">
+          📋 Copy
+        </button>
+        <button 
+          v-if="msg.sender === 'ai' && index === chatMessages.length - 1" 
+          @click="handleRegenerateMessage" 
+          class="hover:text-purple-400 transition-colors flex items-center gap-1"
+        >
+          🔄 Regenerate
+        </button>
+      </div>
         </div>
-
+          </div>
+          </div>
         <div v-if="isAIThinking" class="flex justify-start w-full">
           <div class="bg-gray-800 border border-gray-700/60 text-gray-400 rounded-2xl rounded-bl-none p-4 flex items-center gap-1 text-xs">
             <span class="animate-bounce">●</span>
