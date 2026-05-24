@@ -156,9 +156,11 @@
           </div>
           <div class="space-y-4">
             <select v-model="academic.appealReason" class="field-select">
-              <option value="" disabled>Reason for Appeal Statement Target</option>
-              <option>Stream Re-assignment</option>
-              <option>Incorrect Result Grading</option>
+              <option value="" disabled>What is the bottleneck you face in learning?</option>
+              <option>Unable to concentrate</option>
+              <option>Constantly procastinate</option>
+              <option>Unable to memorize key knowledges</option>
+              <option>Unable to score in exam</option>
             </select>
             <textarea v-model="academic.appealText" rows="4" placeholder="Enter appeal description justification arguments..." class="field-input resize-none pt-3"></textarea>
           </div>
