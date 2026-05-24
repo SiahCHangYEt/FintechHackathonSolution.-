@@ -1,14 +1,31 @@
 # FintechHackathonSolution.-
-Team Midas solution in Finech Hackathon. 
+Didik AI is an intelligent educational platform that personalizes learning by aligning the national curriculum with a student's personal interests, hobbies, and preferences. By bridging academic requirements with what students love, Didik AI transforms standard educational content into deeply engaging, contextualized learning experiences.
 
-Didik AI is an educational solution that tailors students' preferences like interests and hobbies to tutor students so that the students can combine their interests with knowledge they need to learn to understand the teachings from the national curriculums. 
+Project Architecture
+The repository is split into two primary components: frontend and backend.
 
-The current Didik AI has two significant folders, which are backend and frontend folders. The backend consists of .env that stores environmental variables, package.json to secure proxy server and database bridge for the fintech hackathon solution, server.js that creates gateway to connect supabase, the database we use for the solution and Gemini AI. It also acts as the business logic of our solution.
+1. Backend (/backend)
+Acts as the central business logic layer and the primary API gateway for the solution.
 
-The frontend folder is mainly .vue files to render the pages. Tailwind.css is used for visual design, javascript files and .json files are used for configurations and set ups.
+server.js: The core application gateway that handles routing and establishes secure connections with both Supabase (our primary data store) and Gemini AI.
 
-The solution works like this: the student needs to fill out a form the system provided, including the student's academic level, streams, elected subjects, interests, and other information. The student can go to discuss with the Gemini-based Chatbot in the system about
-the topics. There are quizzes provided to let the student answers the questions.
+package.json & Configuration: Configured to manage dependency trees and secure the proxy server and database bridge specific to this hackathon implementation.
 
-AI tool used during the competition: Gemini is used to ask suggestions for debug, configurations, and development. To debug the code and due to the time constraints, the codes written are polished by Gemini. To ensure that the program is working, we still need to fix errors by ourselves. 
+.env: Stores critical environmental variables and sensitive API credentials securely.
+
+2. Frontend (/frontend)
+Provides a highly responsive, intuitive user interface.
+
+Vue.js Framework (.vue files): Manages dynamic page rendering, component lifecycle, and state across the application.
+
+Tailwind CSS: Powers the responsive design and visual styling with utility-first CSS architecture.
+
+JavaScript & JSON: Drives client-side logic, environment setups, and configuration orchestration.
+
+How It Works
+Onboarding Profile: The student completes an onboarding form capturing their academic level, specialized streams, elective subjects, and core personal interests.
+
+Contextual AI Tutoring: Students engage with a Gemini-powered Chatbot that adapts curriculum topics to match the student's personal interest profile.
+
+Knowledge Validation: The system dynamically serves targeted quizzes to assess comprehension and reinforce learning outcomes.
 
