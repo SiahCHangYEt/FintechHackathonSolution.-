@@ -150,19 +150,19 @@
           <div class="flex items-center gap-4 mb-6">
             <div class="step-badge bg-purple-500/10 text-purple-400 border border-purple-500/20">5</div>
             <div>
-              <h2 class="serif text-2xl text-white font-bold">Academic Justification Statement</h2>
-              <p class="text-gray-400 text-sm">Provide system-wide data argument texts regarding module adjustments</p>
+              <h2 class="serif text-2xl text-white font-bold">Your Learning Bottleneck?</h2>
+              <p class="text-gray-400 text-sm">So we can personalise your learning experience!</p>
             </div>
           </div>
           <div class="space-y-4">
             <select v-model="academic.appealReason" class="field-select">
-              <option value="" disabled>What is the bottleneck you face in learning?</option>
+              <option value="" disabled></option>
               <option>Unable to concentrate</option>
               <option>Constantly procastinate</option>
               <option>Unable to memorize key knowledges</option>
               <option>Unable to score in exam</option>
             </select>
-            <textarea v-model="academic.appealText" rows="4" placeholder="Enter appeal description justification arguments..." class="field-input resize-none pt-3"></textarea>
+            <textarea v-model="academic.appealText" rows="4" placeholder="Do provide more explanation..." class="field-input resize-none pt-3"></textarea>
           </div>
           <div class="flex justify-between mt-8">
             <button @click="currentStep = 4" class="btn-back">⬅ Back</button>
