@@ -275,7 +275,7 @@ const electivesList = {
   sastera: ['Economics (Ekonomi)', 'Accounting (Perakaunan)', 'Business Studies (Perniagaan)']
 }
 
-const malaysianStates = ['Selangor', 'Johor', 'Penang', 'Sabah', 'Sarawak', 'Kuala Lumpur','Kedah','Perlis','Pahang','Kelantan','Terengganu','Putrajaya',]
+const malaysianStates = ['Selangor', 'Johor', 'Penang', 'Sabah', 'Sarawak', 'Kuala Lumpur','Kedah','Perlis','Pahang','Kelantan','Terengganu','Putrajaya','Perak','Melaka','Negeri Sembilan']
 const hobbyOptions = [
   'Coding', 'Gaming', 'Mobile App Dev', 'Robotics building',
   'Chess', 'Mathematics Puzzles', 'Reading Sci-Fi', 'Creative Writing',

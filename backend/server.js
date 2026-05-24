@@ -75,50 +75,6 @@ app.get('/api/db-test', async (req, res) => {
   }
 })
 
-// Live AI Core Pathway Endpoint
-app.post('/ai/chat', async (req, res) => {
-  try {
-    const { prompt } = req.body
-    if (!prompt) return res.status(400).json({ error: 'Prompt content is required!' })
-
-    // 🤖 Force Gemini to return a structured JSON object containing both the text and a flag!
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: "object",
-          properties: {
-            tutorReply: { type: "string", description: "The full conversational math explanation incorporating strict LaTeX." },
-            requiresVisualGraph: { type: "boolean", description: "True if the user explicitly asked for a visualization, graph, or diagram, or if explaining the concept heavily benefits from a coordinate plot." }
-          },
-          required: ["tutorReply", "requiresVisualGraph"]
-        }
-      }
-    })
-
-    // Parse the JSON string payload safely
-    const aiPayload = JSON.parse(response.text)
-    let generatedImageUrl = null
-
-    // If the AI model decides a visual aid is necessary, attach the live chart engine link!
-    if (aiPayload.requiresVisualGraph) {
-      // Dynamic Charting: You can customize these dataset arrays to display live parabola vectors!
-      generatedImageUrl = `https://quickchart.io/chart?c={type:'line',data:{labels:[-3,-2,-1,0,1,2,3],datasets:[{label:'f(x) = x^2 - 2x',data:[15,8,3,0,-1,0,3],borderColor:'rgb(96,165,250)',backgroundColor:'rgba(96,165,250,0.1)',fill:true,lineTension:0.4}]}}`
-    }
-
-    res.json({ 
-      success: true, 
-      reply: aiPayload.tutorReply, // Maps directly to your text bubble
-      imageUrl: generatedImageUrl
-    })
-
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Gemini dynamic engine failure', details: err.message })
-  }
-})
 // 📊 End-to-End Student Profile and Progress Aggregation Gateway
 app.get('/api/student/:id/dashboard', async (req, res) => {
   try {
@@ -387,35 +343,96 @@ app.post('/api/profile/update', async (req, res) => {
   }
 })
 
-// 🤖 Adaptive KSSM Gemini Linguistic Routing Layer
+// Adaptive KSSM Gemini Linguistic Routing Layer
+//  Adaptive KSSM Gemini Linguistic & Dynamic Charting Gateway
 app.post('/ai/chat', async (req, res) => {
   try {
-    const { prompt, selectedSubject, studentProfile } = req.body
+    const { prompt, selectedSubject, selectedChapter, studentProfile } = req.body
+    
+    if (!prompt) return res.status(400).json({ error: 'Prompt content is required!' })
 
-    // 🇲🇾 Define the list of strict National Language curriculum blocks
-    const nationalCoreSubjects = [
-      'Bahasa Melayu (BM)',
-      'Sejarah',
-      'Pendidikan Islam/Moral'
-    ]
+    // 🇲🇾 Check if the subject falls under strict National Language curriculum guidelines
+    const nationalCoreSubjects = ['Bahasa Melayu (BM)', 'Sejarah', 'Pendidikan Islam/Moral']
+    const isNationalCore = nationalCoreSubjects.includes(selectedSubject)
 
-    // Base behavioral guardrails for Gemini
-    let systemInstruction = `You are an expert Malaysian KSSM secondary school tutor. 
-    Tailor your analogies to the student's background: ${studentProfile.interests.join(', ')}.`
+    // Context Harvesting: Inject KSSM metadata, textbook chapter parameters, and interest fields
+    const systemInstruction = `You are an expert Malaysian KSSM secondary school tutor specializing in ${selectedSubject}.
+Currently teaching: ${selectedChapter}.
+Student Profile: ${studentProfile?.fullName || 'Student'}, studying at ${studentProfile?.schoolName || 'KSSM school'}.
+Student Analytical Interests: ${studentProfile?.interests ? studentProfile.interests.join(', ') : 'General Education'}.
 
-    // Inject the linguistic KSSM constraint
-    if (nationalCoreSubjects.includes(selectedSubject)) {
-      systemInstruction += `\n\n[CRITICAL RULE] Because the subject is "${selectedSubject}", you MUST conduct the session, explain concepts, and formulate examples strictly in BAHASA MELAYU by default to align with SPM exam standards. However, if the user explicitly types a prompt asking to speak, explain, or translate in English, respect their request immediately and shift to English.`
-    } else {
-      // Math and Science modules fallback smoothly to their preferred choice on step 2
-      systemInstruction += `\n\nDeliver the instruction text mainly in ${studentProfile.languagePreference || 'English'}.`
+[LINGUISTIC MATRIX RULES]
+${isNationalCore 
+  ? `CRITICAL: Because the subject is "${selectedSubject}", you MUST conduct the entire session, explain concepts, and formulate examples strictly in BAHASA MELAYU by default. If the student explicitly asks to switch to English, honor it immediately.` 
+  : `Conduct the session primarily in ${studentProfile?.languagePreference || 'English'}. However, the student might use casual Malaysian cross-lingual phrases (Bahasa Melayu or Manglish). Always respond in the language they are using to prompt you.`
+}
+
+[VISUALAID GUARDRAIL]
+Analyze the user's prompt. If they ask for a visualization, function plot, coordinates, sketch, or schematic—or if explaining this specific ${selectedChapter} concept heavily relies on a 2D Cartesian coordinate chart layout—you must set "requiresVisualGraph" to true. This applies whether they ask in English ("draw a graph", "plot functions") or in Bahasa Melayu ("lukis graf", "plot paksi-x", "visualisasi", "rajah parabola").`
+
+    // Force Gemini to return an immutable structured JSON schema object
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        systemInstruction: systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            tutorReply: { 
+              type: "string", 
+              description: "The full conversational KSSM tutorial response. Incorporate clean standard LaTeX format for math variables or complex math formatting using inline $ equations or standalone $$ math display blocks." 
+            },
+            requiresVisualGraph: { 
+              type: "boolean", 
+              description: "True if the student explicitly requests a chart, grid plot, diagram, or graph in any language (English/Malay), or if the textbook chapter topic requires a coordinate visual to explain properly." 
+            },
+            chartEquationType: {
+              type: "string",
+              enum: ["linear", "quadratic", "cubic", "trig-sin", "trig-cos", "none"],
+              description: "The mathematical archetype of the graph requested, to format the data plotting vector correctly."
+            }
+          },
+          required: ["tutorReply", "requiresVisualGraph", "chartEquationType"]
+        }
+      }
+    })
+
+    // Parse the secure structured JSON response safely
+    const aiPayload = JSON.parse(response.text)
+    let generatedImageUrl = null
+
+    // 📈 DYNAMIC QUICKCHART ROUTER
+    if (aiPayload.requiresVisualGraph) {
+      let chartConfig = ""
+
+      // Tweak dataset arrays automatically based on the mathematical shape the AI detected!
+      switch (aiPayload.chartEquationType) {
+        case "quadratic": // Perfect for Form 4/5 Add Maths Quadratics & Calculus functions!
+          chartConfig = `{type:'line',data:{labels:[-3,-2,-1,0,1,2,3],datasets:[{label:'f(x) = x² - 2x - 3',data:[12,5,0,-3,-4,-3,0],borderColor:'rgb(244,63,94)',backgroundColor:'rgba(244,63,94,0.05)',fill:true,pointRadius:4}]}}`
+          break
+        case "trig-sin": // Perfect for Form 5 Add Maths Chapter 6 Trigonometric Functions!
+          chartConfig = `{type:'line',data:{labels:['0°','90°','180°','270°','360°'],datasets:[{label:'y = sin(x)',data:[0,1,0,-1,0],borderColor:'rgb(59,130,246)',backgroundColor:'transparent',lineTension:0.4}]}}`
+          break
+        case "linear":
+          chartConfig = `{type:'line',data:{labels:[-2,-1,0,1,2],datasets:[{label:'y = 2x + 1',data:[-3,-1,1,3,5],borderColor:'rgb(16,185,129)',fill:false}]}}`
+          break
+        default: // Balanced default fallback fallback grid
+          chartConfig = `{type:'line',data:{labels:[1,2,3,4,5],datasets:[{label:'Syllabus Concept Trend',data:[2,4,7,11,16],borderColor:'rgb(139,92,246)'}]}}`
+      }
+
+      generatedImageUrl = `https://quickchart.io/chart?c=${encodeURIComponent(chartConfig)}`
     }
 
-    // Pass 'systemInstruction' and 'prompt' into your active Gemini API instantiation payload...
-    // const result = await model.generateContent({ contents: ..., systemInstruction: systemInstruction })
-    
-    res.json({ success: true, reply: "AI Response payload text node aligned." })
+    res.json({ 
+      success: true, 
+      reply: aiPayload.tutorReply, 
+      imageUrl: generatedImageUrl
+    })
+
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
+    console.error('Gemini structural engine failure:', err)
+    res.status(500).json({ error: 'Internal pipeline fault', details: err.message })
   }
 })
